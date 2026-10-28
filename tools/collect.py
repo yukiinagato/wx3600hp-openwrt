@@ -13,6 +13,6 @@ cpio=list(base.glob('*rootfs.cpio.gz'))
 if len(cpio)!=1: raise SystemExit('Missing/ambiguous rootfs.cpio.gz')
 (a.out/'initrd.cpio.gz').write_bytes(ram_cpio(cpio[0].read_bytes(),(a.source/'target/linux/generic/other-files/init').read_bytes()))
 for f in a.out.iterdir():
-    if f.is_file(): report[f.name]={'bytes':f.stat().st_size,'sha256':hashlib.sha256(f.read_bytes()).hexdigest()}
+    if f.is_file() and f.name!='manifest.json': report[f.name]={'bytes':f.stat().st_size,'sha256':hashlib.sha256(f.read_bytes()).hexdigest()}
 (a.out/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
 print('Collected components (not installable without personalization):',a.out)

@@ -4,7 +4,8 @@
 import re,subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-paths=subprocess.check_output(['git','ls-files','-z'],cwd=ROOT).decode().split('\0')
+result=subprocess.run(['git','ls-files','-z'],cwd=ROOT,capture_output=True)
+paths=result.stdout.decode().split('\0') if result.returncode==0 else []
 if not any(paths):
     paths=[str(p.relative_to(ROOT)) for p in ROOT.rglob('*') if p.is_file() and
            not any(x in p.relative_to(ROOT).parts for x in ['.git','work','out','private','__pycache__'])]

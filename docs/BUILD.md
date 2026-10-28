@@ -28,7 +28,7 @@ JOBS=4 ./tools/build.sh --menuconfig
 
 首次配置以 `configs/seed.config` 为基础。在菜单中保持 `MediaTek ARM → MT7622 → NEC Aterm WX3600HP`；可选 LuCI 语言、VPN、DDNS 等。默认包含 LuCI HTTPS、完整 wpad、IPv6、UPnP 与漫游相关软件；**软件安装不等于自动正确配置**。无线默认关闭，UPnP/漫游需按 [FEATURES](FEATURES.md) 启用。
 
-重复构建沿用 `work/openwrt/.config`，不会每次覆盖你的选项。升级源码时新建源码树，重新审查补丁，不要只改一个版本号就刷写。保留当前 `.config`、`scripts/diffconfig.sh` 输出及各 feeds 提交。
+重复构建沿用 `work/openwrt/.config`，不会每次覆盖你的选项。更新本移植仓库或升级 OpenWrt 源码时，应先保存 `.config` 再新建源码工作目录；现有准备标记不会自动重新覆盖旧补丁。升级源码时新建源码树，重新审查补丁，不要只改一个版本号就刷写。保留当前 `.config`、`scripts/diffconfig.sh` 输出及各 feeds 提交。
 
 等效手工命令：
 
