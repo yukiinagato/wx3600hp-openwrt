@@ -2,7 +2,7 @@
 
 基于 OpenWrt / Linux 6.18 的 **WX3600HP 实验性移植**。整理了实机适配源码、编译入口、免拆机启动路径、System2 镜像封装、双系统选择与串口恢复资料。
 
-**这是树外移植，尚未合入 OpenWrt 上游。没有可以直接上传原厂网页的“通刷固件”，也不支持普通 `sysupgrade`。** 本仓库的源码构建流程与原机运行版本分开记录：原机已完成内存验证、写入、软重启及断电冷启动；公开构建结果仍需使用者在自己的机器上先做内存验证。详见 [验证状态](docs/STATUS.md)。
+**没有可以直接上传原厂网页的“通刷固件”，也不支持普通 `sysupgrade`。** 本仓库的源码构建流程与原机运行版本分开记录：在测试机上已完成内存验证、写入、软重启及断电冷启动；公开构建结果仍需使用者在自己的机器上先做内存验证。详见 [验证状态](docs/STATUS.md)。
 
 > English: An experimental, out-of-tree OpenWrt port for the NEC Aterm WX3600HP. Includes source overlay, build instructions, owner-specific RAM/flash packaging and recovery notes. **Not an upstream-supported target or a universal factory/sysupgrade image.** Start with [BUILD](docs/BUILD.md), then [INSTALL](docs/INSTALL.md). Calibration, stock signed images and credentials are never redistributed.
 
@@ -18,7 +18,7 @@
 | 操作 / 指示灯 | LuCI；Br/Rt 拨片；保守按钮持久切换系统；无线/端口灯及管理会话蓝灯 |
 | 可选软件 | UPnP/PCP/NAT-PMP、漫游组件、DDNS、WOL 等；需按网络环境配置 |
 
-2.5G 是 WAN 链路速率，不是单个 LAN 的可用速率；每个 LAN 只有 1G，交换机到 CPU 的总链路也是 2.5G。1.2Gbps Wi-Fi PHY 协商速率也不等于 TCP 有效吞吐。WED/硬件流量卸载默认关闭，未宣称长期老化通过或满速 2.5G NAT。
+WED/硬件流量卸载默认关闭。
 
 ## 从哪里开始
 
