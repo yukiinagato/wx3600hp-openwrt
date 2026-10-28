@@ -1,0 +1,46 @@
+{
+  "openwrt": {
+    "url": "https://github.com/openwrt/openwrt.git",
+    "commit": "6b7ea6896a3a83c9ae80d31e8d35d911e032268f",
+    "note": "Pinned source snapshot used for the board port. Original running reference userland identified as r37744-7d0bf92bee; see docs/STATUS.md."
+  },
+  "nec_gpl": {
+    "url": "https://www.aterm.jp/function/source_code/wx3600hp/WX3600HP_source.tar.gz",
+    "sha256": "ae878cc17c38f7920e95d23527c05d076386fa7f1477c9353d6a979b2bcf8583",
+    "bytes": 130910191
+  },
+  "reference_kernel": "6.18.55",
+  "stock_firmware_tested": "1.5.3",
+  "feeds": {
+    "packages": {
+      "url": "https://github.com/openwrt/packages.git",
+      "commit": "3c7f9b46f1d0864e6771a9b68e4a99a956ce0ca8"
+    },
+    "luci": {
+      "url": "https://github.com/openwrt/luci.git",
+      "commit": "4bfd1102236f7f737da4257ca7f6e56146fc80f6"
+    }
+  },
+  "stock_runtime": [
+    {
+      "package": "dropbear",
+      "url": "https://downloads.openwrt.org/releases/24.10.4/targets/mediatek/mt7622/packages/dropbear_2024.86-r1_aarch64_cortex-a53.ipk",
+      "sha256": "7218c522ea746c1618098be23496b655c197a56a12c585e8287a55979ae1370b"
+    },
+    {
+      "package": "libc",
+      "url": "https://downloads.openwrt.org/releases/24.10.4/targets/mediatek/mt7622/packages/libc_1.2.5-r4_aarch64_cortex-a53.ipk",
+      "sha256": "ab8925db4ea8045eb4d42014a29d9e3edbc355ec27cd0572f7d31664fbee0403"
+    },
+    {
+      "package": "nand-utils",
+      "url": "https://downloads.openwrt.org/releases/24.10.4/targets/mediatek/mt7622/packages/nand-utils_2.2.1-r1_aarch64_cortex-a53.ipk",
+      "sha256": "9bd1bfb0b3880a003bc25b5db52f7bae274eec62cd6a6b86565a6569c099d476"
+    },
+    {
+      "package": "libgcc1",
+      "url": "https://downloads.openwrt.org/releases/24.10.4/targets/mediatek/mt7622/packages/libgcc1_13.3.0-r4_aarch64_cortex-a53.ipk",
+      "sha256": "1e35864dcef139ff9f032e974faef586ebf7e7104434b1d76260b639aca8d87d"
+    }
+  ]
+}

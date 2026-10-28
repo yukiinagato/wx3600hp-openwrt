@@ -1,0 +1,78 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# Explicit one-time profile setup, preserves the configured wireless security.
+set -eu
+[ "${1:-}" = --enable ] || { echo 'Usage: wx-mode-setup --enable (first set Wi-Fi country/security in LuCI)'; exit 2; }
+[ ! -e /etc/wx-mode ] || { echo 'Profiles already exist; edit /etc/wx-mode/profiles instead'; exit 1; }
+base=/etc/wx-mode
+mkdir -p "$base/profiles/br" "$base/profiles/rt"
+for mode in br rt; do
+ for name in network wireless dhcp firewall upnpd; do
+  [ -f "/etc/config/$name" ] && cp "/etc/config/$name" "$base/profiles/$mode/$name" || : >"$base/profiles/$mode/$name"
+ done
+done
+# Rt preserves configured Wi-Fi, DHCPv6 and firewall defaults.
+u() { uci -c "$base/profiles/$1" "$2" "$3"; }
+u rt set network.lan.ipaddr=192.168.1.1
+u rt set network.lan.netmask=255.255.255.0
+u rt set network.wan.proto=dhcp
+u rt set network.wan.device=wan
+u rt set network.wan6.proto=dhcpv6
+u rt set network.wan6.device=@wan
+u rt set dhcp.wan6=dhcp
+u rt set dhcp.wan6.interface=wan6
+u rt set dhcp.wan6.ignore=1
+u rt set upnpd.config=upnpd
+u rt set upnpd.config.enabled=1
+u rt set upnpd.config.secure_mode=1
+u rt set upnpd.config.internal_iface=lan
+u rt set upnpd.config.external_iface=wan
+u rt set upnpd.config.external_iface6=wan6
+# Br bridges untagged WAN and LAN; it never provides client DHCP or RA.
+cat >"$base/profiles/br/network" <<'EOF'
+config interface 'loopback'
+ option device 'lo'
+ option proto 'static'
+ option ipaddr '127.0.0.1'
+ option netmask '255.0.0.0'
+config device 'bridge'
+ option name 'br-lan'
+ option type 'bridge'
+ list ports 'wan'
+ list ports 'lan0'
+ list ports 'lan1'
+ list ports 'lan2'
+ list ports 'lan3'
+ list ports 'lan4'
+config interface 'lan'
+ option device 'br-lan'
+ option proto 'dhcp'
+ option delegate '0'
+config interface 'lan6'
+ option device '@lan'
+ option proto 'dhcpv6'
+ option reqprefix 'no'
+EOF
+cat >"$base/profiles/br/dhcp" <<'EOF'
+config dnsmasq
+ option domainneeded '1'
+ option boguspriv '1'
+config dhcp 'lan'
+ option interface 'lan'
+ option ignore '1'
+ option ra 'disabled'
+ option dhcpv6 'disabled'
+ option ndp 'disabled'
+config odhcpd 'odhcpd'
+ option maindhcp '0'
+ option leasefile '/tmp/hosts/odhcpd'
+EOF
+u br set upnpd.config=upnpd
+u br set upnpd.config.enabled=0
+for mode in br rt; do
+ for name in network wireless dhcp firewall upnpd; do uci -c "$base/profiles/$mode" commit "$name"; done
+done
+# Save profiles without overwriting them on first transition.
+printf '%s\n' rt >"$base/current"
+/etc/init.d/wx-panel restart
+printf '%s\n' 'Profiles created. The Br/Rt switch now chooses the network profile; Br management uses upstream DHCP.'

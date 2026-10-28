@@ -1,0 +1,2 @@
+# Only for the optional stock Telnet ELF reader; not needed on the router.
+pyelftools==0.32

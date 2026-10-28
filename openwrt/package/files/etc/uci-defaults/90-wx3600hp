@@ -1,0 +1,19 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+[ "$(cat /tmp/sysinfo/board_name)" = nec,aterm-wx3600hp ] || exit 0
+. /lib/functions/system.sh
+base=$(cat /sys/class/net/eth0/address)
+wan=$(macaddr_add "$base" 1)
+uci set network.wan.macaddr="$wan"
+uci set network.globals.packet_steering=1
+uci set firewall.@defaults[0].flow_offloading=1
+uci set firewall.@defaults[0].flow_offloading_hw=0
+uci set system.@system[0].hostname=WX3600HP
+uci commit network
+uci commit firewall
+uci commit system
+printf '%s\n' openwrt > /etc/wxboot-system
+for svc in wx-panel wx-phy-leds wx-hw-tuning wxboot-switch wx-boot-health; do
+ /etc/init.d/$svc enable
+done
+exit 0

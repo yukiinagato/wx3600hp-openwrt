@@ -1,0 +1,15 @@
+{
+  "luci-app-wx3600hp": {
+    "description": "WX3600HP IPv6 policy",
+    "read": {
+      "uci": [
+        "wx3600hp"
+      ]
+    },
+    "write": {
+      "uci": [
+        "wx3600hp"
+      ]
+    }
+  }
+}

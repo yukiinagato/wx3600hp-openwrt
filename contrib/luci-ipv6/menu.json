@@ -1,0 +1,15 @@
+{
+  "admin/system/wx3600hp": {
+    "title": "WX3600HP",
+    "order": 65,
+    "action": {
+      "type": "view",
+      "path": "wx3600hp"
+    },
+    "depends": {
+      "acl": [
+        "luci-app-wx3600hp"
+      ]
+    }
+  }
+}

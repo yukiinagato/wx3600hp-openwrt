@@ -1,0 +1,42 @@
+#!/bin/sh
+# A relay rewrites all upstream RA source addresses to its own LAN address.
+# Other upstream routers' zero-lifetime RAs would then withdraw that default.
+# Restrict relaying to the gateway currently selected by wan6, optionally off.
+mkdir /tmp/wx-ra-source.lock 2>/dev/null || exit 0
+trap 'rmdir /tmp/wx-ra-source.lock' EXIT
+mode="$(uci -q get wx3600hp.ipv6.ra_source)"
+[ -n "$mode" ] || mode=auto
+status="$(ubus call network.interface.wan6 status 2>/dev/null)"
+dev="$(printf '%s' "$status" | jsonfilter -e '@.l3_device')"
+if [ "$mode" = auto ]; then
+ gateway="$(printf '%s' "$status" | jsonfilter -e '@.route[@.target="::"].nexthop' | head -n 1)"
+else
+ gateway="$mode"
+fi
+if [ "$mode" = off ] || [ -z "$gateway" ] || [ -z "$dev" ]; then
+ nft delete table inet wx_ra_source 2>/dev/null
+ rm -f /tmp/wx-ra-source.state
+ exit 0
+fi
+case "$gateway" in *:*) ;; *) exit 1;; esac
+# Restrict interpolation to a numeric IPv6 address and a Linux interface name.
+case "$gateway" in *[!0-9a-fA-F:]*) exit 1;; esac
+case "$dev" in *[!a-zA-Z0-9_.-]*) exit 1;; esac
+current="$dev $gateway"
+if [ "$(cat /tmp/wx-ra-source.state 2>/dev/null)" = "$current" ] &&
+ nft list table inet wx_ra_source >/dev/null 2>&1; then exit 0; fi
+delete=""
+nft list table inet wx_ra_source >/dev/null 2>&1 && delete='delete table inet wx_ra_source'
+nft -f - <<EOF || exit 1
+$delete
+table inet wx_ra_source {
+ chain input {
+  type filter hook input priority -10; policy accept;
+  iifname "$dev" icmpv6 type nd-router-advert ip6 saddr != $gateway counter drop
+ }
+}
+EOF
+printf '%s\n' "$current" >/tmp/wx-ra-source.state
+logger -t wx-ra-source "IPv6 relay upstream: $gateway on $dev"
+# Solicit a fresh RA after replacing any conflicting prior LAN announcement.
+/etc/init.d/odhcpd restart >/dev/null 2>&1

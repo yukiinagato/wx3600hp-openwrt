@@ -1,0 +1,7 @@
+.git
+work
+out
+private
+__pycache__
+**/__pycache__
+*.pyc

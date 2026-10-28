@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-only
+START=99
+start() {
+ # RAM boots never clear the flash candidate's warm-reset marker.
+ grep -q 'ubi.mtd=ubi' /proc/cmdline || return 0
+ if [ -f /etc/wxboot-confirmed ]; then
+  (sleep 15; pidof netifd >/dev/null && pidof dropbear >/dev/null &&
+   test -d /sys/class/net/br-lan && grep -q ' /overlay .*ubifs ' /proc/mounts &&
+   /usr/sbin/wxboot_guard --clear) &
+ else
+  (sleep 120; [ -f /tmp/ramtest-keep ] || reboot -f) &
+ fi
+}

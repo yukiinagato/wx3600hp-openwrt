@@ -1,0 +1,12 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+set -eu
+grep -q 'ubi.mtd=ubi' /proc/cmdline
+grep -q ' /overlay .*ubifs ' /proc/mounts
+pidof netifd >/dev/null
+pidof dropbear >/dev/null
+[ -d /sys/class/net/br-lan ]
+printf '%s\n' confirmed > /etc/wxboot-confirmed
+sync
+/usr/sbin/wxboot_guard --clear
+printf '%s\n' 'Boot confirmed. Still test a software reboot and a 10-second power cycle.'

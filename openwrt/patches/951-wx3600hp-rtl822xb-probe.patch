@@ -1,0 +1,18 @@
+--- a/drivers/net/phy/realtek/realtek_main.c
++++ b/drivers/net/phy/realtek/realtek_main.c
+@@ -3944,6 +3944,7 @@
+ 		.soft_reset	= genphy_soft_reset,
+ 		.get_features	= rtl822x_get_features,
+ 		.config_aneg	= rtl822x_config_aneg,
++		.probe		= rtl822x_probe,
+ 		.config_init	= rtl822xb_config_init,
+ 		.inband_caps	= rtl822x_inband_caps,
+ 		.config_inband	= rtl822x_config_inband,
+@@ -3975,6 +3976,7 @@
+ 		.soft_reset	= genphy_soft_reset,
+ 		.get_features	= rtl822x_get_features,
+ 		.config_aneg	= rtl822x_config_aneg,
++		.probe		= rtl822x_probe,
+ 		.config_init	= rtl822xb_config_init,
+ 		.inband_caps	= rtl822x_inband_caps,
+ 		.config_inband	= rtl822x_config_inband,

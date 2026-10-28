@@ -1,0 +1,17 @@
+/work/
+/out/
+/private/
+__pycache__/
+*.pyc
+*.o
+*.ko
+*.elf
+*.bin
+*.dtb
+*.itb
+*.ubi
+*.ubifs
+*.squashfs
+*.tar.gz
+*.cpio*
+.DS_Store

@@ -1,0 +1,3 @@
+#!/bin/sh
+/usr/sbin/wx-ipv6-mode
+/usr/sbin/wx-ra-source

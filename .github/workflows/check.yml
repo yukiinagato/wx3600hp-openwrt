@@ -1,0 +1,19 @@
+name: Source and host-tool checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install host build dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu u-boot-tools device-tree-compiler
+      - name: Format and boot-record tests; publication audit
+        run: make test
+      - name: Compile ARM64 helpers
+        run: ./tools/build-host-tools.sh
+      - name: Prepare pinned OpenWrt and inspect the source delta
+        run: |
+          python3 tools/prepare.py
+          git -C work/openwrt diff --check

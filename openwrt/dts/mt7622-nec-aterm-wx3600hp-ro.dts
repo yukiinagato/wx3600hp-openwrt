@@ -1,0 +1,130 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR MIT)
+// Experimental board port; no upstream support declaration. Personalization required.
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include "mt7622.dtsi"
+#include "mt6380.dtsi"
+/ {
+ model = "NEC Aterm WX3600HP read-only RAM";
+ compatible = "nec,aterm-wx3600hp", "mediatek,mt7622";
+ aliases { serial0 = &uart0; };
+ chosen {
+  stdout-path = "serial0:115200n8";
+  bootargs = "console=ttyS0,115200n1 earlycon=uart8250,mmio32,0x11002000 swiotlb=512 panic=10";
+ };
+ memory@40000000 { device_type = "memory"; reg = <0 0x40000000 0 0x20000000>; };
+
+};
+&cpu0 { proc-supply = <&mt6380_vcpu_reg>; sram-supply = <&mt6380_vm_reg>; };
+&cpu1 { proc-supply = <&mt6380_vcpu_reg>; sram-supply = <&mt6380_vm_reg>; };
+&pio {
+ ramtest_eth_pins: ramtest-eth-pins { mux { function = "eth"; groups = "mdc_mdio"; }; };
+ ramtest_uart_pins: ramtest-uart-pins { mux { function = "uart"; groups = "uart0_0_tx_rx"; }; };
+ ramtest_pmic_pins: ramtest-pmic-pins { mux { function = "pmic"; groups = "pmic_bus"; }; };
+};
+&pwrap { pinctrl-names = "default"; pinctrl-0 = <&ramtest_pmic_pins>; status = "okay"; };
+&uart0 { pinctrl-names = "default"; pinctrl-0 = <&ramtest_uart_pins>; status = "okay"; };
+&watchdog { status = "okay"; };
+&eth {
+ pinctrl-names = "default"; pinctrl-0 = <&ramtest_eth_pins>; status = "okay";
+ gmac0: mac@0 {
+  compatible = "mediatek,eth-mac"; reg = <0>; phy-mode = "2500base-x";
+  fixed-link { speed = <2500>; full-duplex; pause; };
+ };
+ mdio-bus {
+  #address-cells = <1>; #size-cells = <0>;
+  switch@1f {
+   compatible = "mediatek,mt7531"; reg = <31>;
+   reset-gpios = <&pio 54 GPIO_ACTIVE_HIGH>;
+   interrupt-controller; #interrupt-cells = <1>;
+   interrupt-parent = <&pio>; interrupts = <53 IRQ_TYPE_LEVEL_HIGH>;
+   mdio {
+    #address-cells = <1>; #size-cells = <0>;
+    lan_phy0: ethernet-phy@0 { reg = <0>; mediatek,led-config = <0x21 0x8009 0x26 0xc007 0x27 0x003f>; };
+    lan_phy1: ethernet-phy@1 { reg = <1>; mediatek,led-config = <0x21 0x8009 0x26 0xc007 0x27 0x003f>; };
+    lan_phy2: ethernet-phy@2 { reg = <2>; mediatek,led-config = <0x21 0x8009 0x26 0xc007 0x27 0x003f>; };
+    lan_phy3: ethernet-phy@3 { reg = <3>; mediatek,led-config = <0x21 0x8009 0x26 0xc007 0x27 0x003f>; };
+    lan_phy4: ethernet-phy@4 { reg = <4>; mediatek,led-config = <0x21 0x8009 0x26 0xc007 0x27 0x003f>; };
+    wan_phy: ethernet-phy@5 {
+     reg = <5>;
+     reset-gpios = <&pio 101 GPIO_ACTIVE_LOW>;
+     reset-assert-us = <1000000>; reset-deassert-us = <3000000>;
+    };
+   };
+   ports {
+    #address-cells = <1>; #size-cells = <0>;
+    /* Labels are switch indices; front-panel numbering remains unverified. */
+    port@0 { reg = <0>; label = "lan0"; phy-handle = <&lan_phy0>; };
+    port@1 { reg = <1>; label = "lan1"; phy-handle = <&lan_phy1>; };
+    port@2 { reg = <2>; label = "lan2"; phy-handle = <&lan_phy2>; };
+    port@3 { reg = <3>; label = "lan3"; phy-handle = <&lan_phy3>; };
+    port@4 { reg = <4>; label = "lan4"; phy-handle = <&lan_phy4>; };
+    port@5 { reg = <5>; label = "wan"; phy-mode = "2500base-x"; phy-handle = <&wan_phy>; };
+    port@6 {
+     reg = <6>; ethernet = <&gmac0>; phy-mode = "2500base-x";
+     fixed-link { speed = <2500>; full-duplex; pause; };
+    };
+   };
+  };
+ };
+};
+/* Unused controllers remain disabled; PCIe and SNFI are enabled below. */
+&nandc { status = "disabled"; };
+&snfi { status = "disabled"; };
+&bch { status = "disabled"; };
+&nor_flash { status = "disabled"; };
+&mmc0 { status = "disabled"; };
+&mmc1 { status = "disabled"; };
+&pcie0 { status = "disabled"; };
+&pcie1 { status = "disabled"; };
+&wmac { status = "disabled"; };
+&ssusb { status = "disabled"; };
+&sata { status = "disabled"; };
+
+&secmon_reserved { reg = <0 0x43000000 0 0x01000000>; };
+&wed0 { status = "disabled"; };
+&wed1 { status = "disabled"; };
+&hsdma { status = "disabled"; };
+&eth { /delete-property/ mediatek,wed; /delete-property/ mediatek,pcie-mirror; };
+
+&pio {
+ wifi_pcie0_pins: wifi-pcie0-pins { mux { function = "pcie"; groups = "pcie0_pad_perst", "pcie0_1_waken", "pcie0_1_clkreq"; }; };
+ wifi_pcie1_pins: wifi-pcie1-pins { mux { function = "pcie"; groups = "pcie1_pad_perst", "pcie1_0_waken", "pcie1_0_clkreq"; }; };
+};
+&pcie0 { pinctrl-names = "default"; pinctrl-0 = <&wifi_pcie0_pins>; status = "okay"; };
+&pcie1 { pinctrl-names = "default"; pinctrl-0 = <&wifi_pcie1_pins>; status = "okay"; };
+&slot0 {
+ wifi0: wifi@0,0 {
+  ieee80211-freq-limit = <2400000 2500000>;
+  compatible = "mediatek,mt76"; reg = <0 0 0 0 0>;
+  status = "disabled"; /* tools/personalize.py supplies this device's EEPROM. */
+ };
+};
+&slot1 {
+ wifi1: wifi@0,0 {
+  ieee80211-freq-limit = <5000000 6000000>;
+  compatible = "mediatek,mt76"; reg = <0 0 0 0 0>;
+  status = "disabled"; /* tools/personalize.py supplies this device's EEPROM. */
+ };
+};
+
+&bch { status = "okay"; };
+&pio { ramtest_snfi_pins: ramtest-snfi-pins { mux { function = "flash"; groups = "snfi"; }; }; };
+&snfi {
+ status = "okay"; pinctrl-names = "default"; pinctrl-0 = <&ramtest_snfi_pins>;
+ flash@0 {
+  compatible = "spi-nand"; reg = <0>; spi-tx-bus-width = <4>; spi-rx-bus-width = <4>;
+  nand-ecc-engine = <&snfi>; nand-ecc-strength = <4>; nand-ecc-step-size = <512>;
+  mediatek,nmbm; nec,read-only-probe;
+  partitions { compatible = "fixed-partitions"; #address-cells = <1>; #size-cells = <1>;
+   partition@0 { label = "BL2"; reg = <0 0x80000>; read-only; };
+   partition@80000 { label = "FIP"; reg = <0x80000 0x200000>; read-only; };
+   partition@280000 { label = "Config"; reg = <0x280000 0x80000>; read-only; };
+   partition@300000 { label = "Factory"; reg = <0x300000 0x100000>; read-only; };
+   partition@400000 { label = "bootseq"; reg = <0x400000 0x40000>; read-only; };
+   partition@440000 { label = "devinfo"; reg = <0x440000 0x40000>; read-only; };
+   partition@1500000 { label = "System1"; reg = <0x1500000 0x2000000>; read-only; };
+   partition@4000000 { label = "System2"; reg = <0x4000000 0x2000000>; read-only; };
+  };
+ };
+};

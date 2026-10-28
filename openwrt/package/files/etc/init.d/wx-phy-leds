@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+# NEC's published board setup: RTL8221B link speed and activity LED registers.
+START=21
+start() {
+ # Shorten LAN activity pulses to one quarter of the original timings.
+ for p in 0 1 2 3 4; do
+  /usr/sbin/wx-phy-mmd lan$p $p 31 0x22 0x0300 || return 1
+  /usr/sbin/wx-phy-mmd lan$p $p 31 0x23 0x0500 || return 1
+ done
+ [ -e /sys/bus/mdio_bus/devices/mt7530-0:05/phy_id ] || return 1
+ [ "$(cat /sys/bus/mdio_bus/devices/mt7530-0:05/phy_id)" = "0x001cc848" ] || return 1
+ /usr/sbin/wx-phy-mmd wan 5 31 0xd032 0x20 || return 1
+ /usr/sbin/wx-phy-mmd wan 5 31 0xd034 0x26 || return 1
+ /usr/sbin/wx-phy-mmd wan 5 31 0xd036 0x26 || return 1
+ /usr/sbin/wx-phy-mmd wan 5 31 0xd040 0x3906
+}

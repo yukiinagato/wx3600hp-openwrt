@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+/ {
+ description = "WX3600HP OpenWrt helper";
+ #address-cells = <1>;
+ images {
+  script@1 {
+   description = "OpenWrt boot helper";
+   data = /incbin/("boothelper.cmd");
+   type = "script";
+   arch = "arm64";
+   os = "linux";
+   compression = "none";
+   hash@1 { algo = "sha256"; };
+  };
+ };
+};

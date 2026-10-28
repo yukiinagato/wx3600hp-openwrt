@@ -1,0 +1,45 @@
+#!/bin/sh
+# Select delegated-prefix service or the tested upstream relay, only in Rt.
+set -eu
+[ "$(cat /etc/wx-mode/current)" = rt ] || exit 0
+[ "$(uci -q get wx3600hp.ipv6.mode || true)" != manual ] || exit 0
+mkdir /tmp/wx-ipv6-mode.lock 2>/dev/null || exit 0
+trap 'rmdir /tmp/wx-ipv6-mode.lock' EXIT
+i=0
+while [ -d /tmp/wx-mode-lock ]; do
+ i=$((i+1)); [ "$i" -le 30 ] || exit 0
+ sleep 1
+done
+[ "$(cat /etc/wx-mode/current)" = rt ] || exit 0
+status=$(ubus call network.interface.wan6 status 2>/dev/null || echo '{}')
+prefix=$(printf '%s' "$status" | jsonfilter -q -e '@["ipv6-prefix"][0].address' || true)
+if [ -n "$prefix" ]; then mode=server; else mode=relay; fi
+[ "${1:-}" != --status ] || { printf '%s\n' "$mode"; exit 0; }
+changed=0
+set_if_changed() {
+ old=$(uci -q get "$1" || true)
+ [ "$old" = "$2" ] && return 0
+ uci set "$1=$2"
+ changed=1
+}
+set_if_changed dhcp.lan.ra "$mode"
+set_if_changed dhcp.lan.dhcpv6 "$mode"
+if [ "$mode" = server ]; then
+ set_if_changed dhcp.lan.ndp disabled
+ set_if_changed dhcp.wan6.ignore 1
+ set_if_changed dhcp.wan6.master 0
+else
+ set_if_changed dhcp.lan.ndp relay
+ set_if_changed dhcp.wan6.ignore 0
+ set_if_changed dhcp.wan6.master 1
+ set_if_changed dhcp.wan6.ra relay
+ set_if_changed dhcp.wan6.dhcpv6 relay
+ set_if_changed dhcp.wan6.ndp relay
+fi
+if [ "$changed" = 1 ]; then
+ uci commit dhcp
+ /etc/init.d/odhcpd restart
+ /usr/sbin/wx-ra-source || true
+ logger -t wx-ipv6 "WAN6 mode=$mode (delegation available: $([ -n "$prefix" ] && echo yes || echo no))"
+fi
+printf '%s\n' "$mode" >/tmp/wx-ipv6-mode

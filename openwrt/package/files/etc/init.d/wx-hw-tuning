@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+START=22
+STOP=88
+start() {
+ [ -r /sys/bus/mdio_bus/devices/mt7530-0:05/phy_id ] || return 0
+ [ "$(cat /sys/bus/mdio_bus/devices/mt7530-0:05/phy_id)" = 0x001cc848 ] || return 0
+ # Stock startup delays EEE initialization to avoid IPv6 DAD problems.
+ # Keep the present inactive power-saving feature explicitly disabled.
+ /usr/sbin/ethtool --set-eee wan eee off >/tmp/wx-hw-tuning.log 2>&1 || logger -t wx-hw-tuning 'WAN EEE setting unavailable'
+ /usr/sbin/ethtool --show-eee wan >>/tmp/wx-hw-tuning.log 2>&1
+ /usr/sbin/wx-phy-mmd wan 5 31 0xa430 >>/tmp/wx-hw-tuning.log 2>&1
+}

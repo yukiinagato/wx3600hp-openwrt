@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+umask 077
+base=/etc/wx-mode
+boot=0
+if [ "${1:-}" = --boot ]; then
+ boot=1
+ raw=$(/usr/sbin/wx-panel --raw)
+ case "$raw" in 2) target=br;;3) target=rt;;*) target=$(cat "$base/current");;esac
+else target=${1:-}; fi
+case "$target" in br|rt) ;;*) exit 2;;esac
+mkdir /tmp/wx-mode-lock 2>/dev/null || exit 0
+trap 'rmdir /tmp/wx-mode-lock' EXIT
+current=$(cat "$base/current" 2>/dev/null || true)
+[ -f "$base/pending" ] || [ "$target" != "$current" ] || exit 0
+if [ ! -f "$base/pending" ] && [ -n "$current" ]; then
+ for name in network wireless dhcp firewall upnpd; do cp "/etc/config/$name" "$base/profiles/$current/$name.new"; done
+ for name in network wireless dhcp firewall upnpd; do mv "$base/profiles/$current/$name.new" "$base/profiles/$current/$name"; done
+fi
+printf '%s\n' "$target" > "$base/pending"
+sync
+for name in network wireless dhcp firewall upnpd; do
+ uci -c "$base/profiles/$target" show "$name" >/dev/null
+ cp "$base/profiles/$target/$name" "/etc/config/$name.wx-new"
+done
+for name in network wireless dhcp firewall upnpd; do mv "/etc/config/$name.wx-new" "/etc/config/$name"; done
+printf '%s\n' "$target" > "$base/current.new"
+mv "$base/current.new" "$base/current"
+sync
+rm "$base/pending"
+sync
+logger -t wx-mode "Selected $target mode"
+if [ "$boot" = 0 ]; then
+ /etc/init.d/network reload
+ wifi reload
+ /etc/init.d/firewall restart
+ /etc/init.d/dnsmasq restart
+ /etc/init.d/odhcpd restart
+ /etc/init.d/packet_steering restart
+ /etc/init.d/wx-hw-tuning start
+ /etc/init.d/uhttpd reload
+ /etc/init.d/miniupnpd restart
+ /etc/init.d/usteer restart || true
+ (sleep 6; /usr/sbin/wx-ipv6-mode) >/tmp/wx-ipv6-mode.log 2>&1 &
+fi
